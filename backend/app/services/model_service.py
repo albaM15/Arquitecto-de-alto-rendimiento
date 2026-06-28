@@ -194,16 +194,12 @@ class ModelService:
         famsup = as_binary(data.get("famsup", 1))
         romantic = as_binary(data.get("romantic", 0))
 
-        indice_rendimiento = (raw["G1"] + raw["G2"] + 2 * raw["G3"]) / 4
+        indice_rendimiento = 0.2 * raw["G1"] + 0.3 * raw["G2"] + 0.5 * raw["G3"]
         tendencia_calificaciones = raw["G3"] - raw["G1"]
         indice_participacion = (activities + internet + (1 - schoolsup)) / 3
         perfil_social = (raw["goout"] + raw["famrel"] + romantic) / 3
-        autonomia_estudio = raw["studytime"] + internet - famsup
-        estilo_liderazgo = (
-            1.0
-            if indice_rendimiento >= 14 and indice_participacion >= 0.66
-            else 0.0
-        )
+        autonomia_estudio = autonomia_estudio = (raw["studytime"] + internet + famsup) / 3
+        estilo_liderazgo = (indice_rendimiento + indice_participacion) / 2
         riesgo_academico = (
             raw["failures"]
             + math.log1p(raw["absences"])
