@@ -1,0 +1,14 @@
+{
+  "course_id": "CURSO_ML_2026",
+  "group_size": 4,
+  "students": [
+    {"student_id": "STU001", "age": 17, "G1": 16, "G2": 17, "G3": 18, "absences": 1, "studytime": 4, "failures": 0, "freetime": 2, "goout": 2, "Dalc": 1, "Walc": 1, "health": 5, "traveltime": 1, "famrel": 5, "Medu": 4, "Fedu": 4, "activities": "yes", "internet": "yes", "schoolsup": "no", "famsup": "yes", "romantic": "no"},
+    {"student_id": "STU002", "age": 18, "G1": 11, "G2": 12, "G3": 12, "absences": 6, "studytime": 2, "failures": 0, "freetime": 4, "goout": 5, "Dalc": 2, "Walc": 3, "health": 4, "traveltime": 2, "famrel": 4, "Medu": 3, "Fedu": 2, "activities": "yes", "internet": "yes", "schoolsup": "no", "famsup": "yes", "romantic": "yes"},
+    {"student_id": "STU003", "age": 17, "G1": 9, "G2": 10, "G3": 10, "absences": 12, "studytime": 1, "failures": 1, "freetime": 3, "goout": 3, "Dalc": 1, "Walc": 2, "health": 3, "traveltime": 3, "famrel": 3, "Medu": 1, "Fedu": 1, "activities": "no", "internet": "yes", "schoolsup": "yes", "famsup": "yes", "romantic": "no"},
+    {"student_id": "STU004", "age": 16, "G1": 14, "G2": 14, "G3": 15, "absences": 3, "studytime": 3, "failures": 0, "freetime": 3, "goout": 2, "Dalc": 1, "Walc": 1, "health": 4, "traveltime": 1, "famrel": 4, "Medu": 3, "Fedu": 3, "activities": "yes", "internet": "yes", "schoolsup": "no", "famsup": "no", "romantic": "no"},
+    {"student_id": "STU005", "age": 18, "G1": 13, "G2": 13, "G3": 14, "absences": 5, "studytime": 2, "failures": 0, "freetime": 5, "goout": 5, "Dalc": 3, "Walc": 4, "health": 4, "traveltime": 2, "famrel": 5, "Medu": 2, "Fedu": 2, "activities": "yes", "internet": "yes", "schoolsup": "no", "famsup": "yes", "romantic": "yes"},
+    {"student_id": "STU006", "age": 17, "G1": 8, "G2": 9, "G3": 9, "absences": 14, "studytime": 1, "failures": 2, "freetime": 4, "goout": 4, "Dalc": 2, "Walc": 2, "health": 3, "traveltime": 3, "famrel": 3, "Medu": 1, "Fedu": 1, "activities": "no", "internet": "no", "schoolsup": "yes", "famsup": "yes", "romantic": "no"},
+    {"student_id": "STU007", "age": 16, "G1": 15, "G2": 16, "G3": 16, "absences": 2, "studytime": 4, "failures": 0, "freetime": 2, "goout": 1, "Dalc": 1, "Walc": 1, "health": 5, "traveltime": 1, "famrel": 5, "Medu": 4, "Fedu": 4, "activities": "no", "internet": "yes", "schoolsup": "no", "famsup": "yes", "romantic": "no"},
+    {"student_id": "STU008", "age": 19, "G1": 12, "G2": 11, "G3": 11, "absences": 8, "studytime": 2, "failures": 0, "freetime": 5, "goout": 4, "Dalc": 2, "Walc": 3, "health": 4, "traveltime": 2, "famrel": 4, "Medu": 2, "Fedu": 3, "activities": "yes", "internet": "yes", "schoolsup": "no", "famsup": "no", "romantic": "yes"}
+  ]
+}
