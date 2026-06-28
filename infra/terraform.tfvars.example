@@ -1,0 +1,8 @@
+project_name    = "ml-grupos"
+aws_region      = "us-east-1"
+desired_count   = 1
+allowed_origins = "*"
+
+# En el primer apply déjalo vacío.
+# Después de subir imagen a ECR usa: backend_image_uri = "<ecr_repo_url>:latest"
+backend_image_uri = ""
