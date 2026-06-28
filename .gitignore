@@ -1,0 +1,15 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+
+# Archivos temporales
+*.zip
+/tmp/
+
+# Credenciales y secrets
+*.pem
+*.key
+.env
