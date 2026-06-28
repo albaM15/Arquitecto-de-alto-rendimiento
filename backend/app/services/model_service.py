@@ -74,9 +74,12 @@ NUMERIC_DEFAULTS = {
 def as_binary(value: Any) -> float:
     if isinstance(value, bool):
         return 1.0 if value else 0.0
+
     if isinstance(value, (int, float)):
         return 1.0 if float(value) > 0 else 0.0
+
     text = str(value).strip().lower()
+
     return 1.0 if text in {"yes", "si", "sí", "true", "1", "y"} else 0.0
 
 
@@ -84,7 +87,9 @@ def safe_float(value: Any, default: float) -> float:
     try:
         if value is None or value == "":
             return default
+
         return float(value)
+
     except (TypeError, ValueError):
         return default
 
@@ -93,8 +98,10 @@ class ModelService:
     def __init__(self) -> None:
         self.settings = get_settings()
         self.model_dir = Path(self.settings.model_dir)
+
         self.rf_model: Any | None = None
         self.scaler: Any | None = None
+
         self.profile_map: dict[int, str] = DEFAULT_PROFILE_MAP.copy()
         self.model_features: list[str] = DEFAULT_MODEL_FEATURES.copy()
         self.model_version = "rf-kmedoids-v1"
@@ -104,7 +111,10 @@ class ModelService:
         return self.rf_model is not None
 
     def load(self) -> None:
-        download_model_artifacts_from_s3(self.settings.model_s3_bucket, str(self.model_dir))
+        download_model_artifacts_from_s3(
+            self.settings.model_s3_bucket,
+            str(self.model_dir)
+        )
 
         rf_path = self.model_dir / "random_forest_model.joblib"
         scaler_path = self.model_dir / "scaler.joblib"
@@ -124,13 +134,18 @@ class ModelService:
         if profiles_path.exists():
             with profiles_path.open("r", encoding="utf-8") as file:
                 loaded_profiles = json.load(file)
-            self.profile_map = {int(key): value for key, value in loaded_profiles.items()}
+
+            self.profile_map = {
+                int(key): value
+                for key, value in loaded_profiles.items()
+            }
 
         if features_path.exists():
             with features_path.open("r", encoding="utf-8") as file:
                 self.model_features = json.load(file)
 
         expected = getattr(self.rf_model, "n_features_in_", len(self.model_features))
+
         if expected != len(self.model_features):
             logger.warning(
                 "El RF espera %s features, pero selected_features tiene %s. Se ajustará por padding/truncado.",
@@ -139,10 +154,17 @@ class ModelService:
             )
 
     def schema(self) -> dict[str, Any]:
-        expected = getattr(self.rf_model, "n_features_in_", len(self.model_features)) if self.rf_model else len(self.model_features)
+        expected = (
+            getattr(self.rf_model, "n_features_in_", len(self.model_features))
+            if self.rf_model
+            else len(self.model_features)
+        )
+
         scaler_features = []
+
         if self.scaler is not None and hasattr(self.scaler, "feature_names_in_"):
             scaler_features = list(self.scaler.feature_names_in_)
+
         return {
             "model_version": self.model_version,
             "expected_model_features": expected,
@@ -155,11 +177,16 @@ class ModelService:
         data = student.model_dump()
         extra = getattr(student, "model_extra", None) or {}
         data.update(extra)
+
         return data
 
     def _build_feature_dict(self, student: StudentInput) -> dict[str, float]:
         data = self._raw_values(student)
-        raw = {name: safe_float(data.get(name), default) for name, default in NUMERIC_DEFAULTS.items()}
+
+        raw = {
+            name: safe_float(data.get(name), default)
+            for name, default in NUMERIC_DEFAULTS.items()
+        }
 
         activities = as_binary(data.get("activities", 0))
         internet = as_binary(data.get("internet", 1))
@@ -167,14 +194,21 @@ class ModelService:
         famsup = as_binary(data.get("famsup", 1))
         romantic = as_binary(data.get("romantic", 0))
 
-        # Variables derivadas alineadas con el informe del proyecto.
         indice_rendimiento = (raw["G1"] + raw["G2"] + 2 * raw["G3"]) / 4
         tendencia_calificaciones = raw["G3"] - raw["G1"]
         indice_participacion = (activities + internet + (1 - schoolsup)) / 3
         perfil_social = (raw["goout"] + raw["famrel"] + romantic) / 3
         autonomia_estudio = raw["studytime"] + internet - famsup
-        estilo_liderazgo = 1.0 if indice_rendimiento >= 14 and indice_participacion >= 0.66 else 0.0
-        riesgo_academico = raw["failures"] + math.log1p(raw["absences"]) + (1.0 if raw["G1"] < 10 else 0.0)
+        estilo_liderazgo = (
+            1.0
+            if indice_rendimiento >= 14 and indice_participacion >= 0.66
+            else 0.0
+        )
+        riesgo_academico = (
+            raw["failures"]
+            + math.log1p(raw["absences"])
+            + (1.0 if raw["G1"] < 10 else 0.0)
+        )
         balance_social = raw["freetime"] - raw["goout"]
 
         feature_dict = {
@@ -189,13 +223,23 @@ class ModelService:
             "balance_social": balance_social,
         }
 
-        # Si hay scaler, se transforman solo las variables que el scaler conoce.
         if self.scaler is not None and hasattr(self.scaler, "feature_names_in_"):
             scaler_features = list(self.scaler.feature_names_in_)
-            scaler_input = np.array([[safe_float(feature_dict.get(name), NUMERIC_DEFAULTS.get(name, 0.0)) for name in scaler_features]])
+
+            scaler_input = np.array([
+                [
+                    safe_float(
+                        feature_dict.get(name),
+                        NUMERIC_DEFAULTS.get(name, 0.0)
+                    )
+                    for name in scaler_features
+                ]
+            ])
+
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 scaled = self.scaler.transform(scaler_input)[0]
+
             for name, value in zip(scaler_features, scaled):
                 feature_dict[name] = float(value)
 
@@ -203,11 +247,21 @@ class ModelService:
 
     def vectorize(self, student: StudentInput) -> np.ndarray:
         feature_dict = self._build_feature_dict(student)
-        vector = [float(feature_dict.get(name, 0.0)) for name in self.model_features]
 
-        expected = getattr(self.rf_model, "n_features_in_", len(vector)) if self.rf_model else len(vector)
+        vector = [
+            float(feature_dict.get(name, 0.0))
+            for name in self.model_features
+        ]
+
+        expected = (
+            getattr(self.rf_model, "n_features_in_", len(vector))
+            if self.rf_model
+            else len(vector)
+        )
+
         if len(vector) < expected:
             vector.extend([0.0] * (expected - len(vector)))
+
         elif len(vector) > expected:
             vector = vector[:expected]
 
@@ -218,14 +272,24 @@ class ModelService:
             self.load()
 
         vector = self.vectorize(student)
+
         prediction = int(self.rf_model.predict(vector)[0])
-        probabilities_raw = self.rf_model.predict_proba(vector)[0] if hasattr(self.rf_model, "predict_proba") else []
-        classes = list(getattr(self.rf_model, "classes_", range(len(probabilities_raw))))
+
+        probabilities_raw = (
+            self.rf_model.predict_proba(vector)[0]
+            if hasattr(self.rf_model, "predict_proba")
+            else []
+        )
+
+        classes = list(
+            getattr(self.rf_model, "classes_", range(len(probabilities_raw)))
+        )
 
         probabilities = {
             self.profile_map.get(int(cls), str(cls)): round(float(prob), 4)
             for cls, prob in zip(classes, probabilities_raw)
         }
+
         confidence = max(probabilities.values()) if probabilities else 1.0
         profile_name = self.profile_map.get(prediction, f"Perfil {prediction}")
 
@@ -235,7 +299,8 @@ class ModelService:
         )
 
         return PredictionResponse(
-            student_id=student.student_id,
+            student_id=student.student_id or "",
+            student_name=student.student_name,
             profile_id=prediction,
             profile_name=profile_name,
             confidence=round(float(confidence), 4),

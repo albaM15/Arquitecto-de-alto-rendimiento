@@ -2,20 +2,23 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class StudentInput(BaseModel):
-    """Perfil de entrada de un estudiante.
+    """
+    Perfil de entrada de un estudiante.
 
-    Se deja extra="allow" porque en producción puede llegar información adicional
-    desde la plataforma EduTech. El modelo solo usará las variables definidas en
-    selected_features.json y derivadas desde este payload.
+    El profesor sube nombres de alumnos, no IDs.
+    El student_id es opcional porque el backend puede generarlo automáticamente.
     """
 
     model_config = ConfigDict(extra="allow")
 
-    student_id: str = Field(..., examples=["STU001"])
+    student_id: str | None = Field(default=None, examples=["STU001"])
+    student_name: str = Field(..., examples=["Ana Torres"])
+
     age: float = Field(17, ge=10, le=80)
     G1: float = Field(12, ge=0, le=20)
     G2: float = Field(12, ge=0, le=20)
@@ -32,6 +35,7 @@ class StudentInput(BaseModel):
     famrel: float = Field(4, ge=1, le=5)
     Medu: float = Field(2, ge=0, le=4)
     Fedu: float = Field(2, ge=0, le=4)
+
     activities: Any = Field("no")
     internet: Any = Field("yes")
     schoolsup: Any = Field("no")
@@ -45,6 +49,7 @@ class PredictionRequest(BaseModel):
 
 class PredictionResponse(BaseModel):
     student_id: str
+    student_name: str
     profile_id: int
     profile_name: str
     confidence: float
@@ -65,6 +70,7 @@ class GroupGenerationRequest(BaseModel):
 
 class GroupMember(BaseModel):
     student_id: str
+    student_name: str
     profile_id: int
     profile_name: str
     confidence: float
