@@ -1,0 +1,97 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #172033;
+  background: #eef4ff;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+button { font: inherit; cursor: pointer; }
+
+.page {
+  min-height: 100vh;
+  padding: 40px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 32px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #ffffff 0%, #dceaff 100%);
+  box-shadow: 0 24px 70px rgba(65, 91, 132, 0.18);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2c63c7;
+}
+
+h1 { margin: 0; font-size: clamp(32px, 4vw, 56px); line-height: 1; }
+h2 { margin: 0; font-size: 20px; }
+.hero p:not(.eyebrow) { max-width: 720px; font-size: 18px; color: #4c5f7d; }
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.card {
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(114, 143, 192, .22);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 18px 45px rgba(65, 91, 132, 0.12);
+}
+
+.card-header, .actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+textarea, pre {
+  width: 100%;
+  min-height: 420px;
+  margin: 18px 0;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #cad8ef;
+  background: #0d182b;
+  color: #e9f1ff;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  overflow: auto;
+}
+
+pre { white-space: pre-wrap; }
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: #215ed9;
+  color: white;
+  font-weight: 700;
+}
+
+button:disabled { opacity: .55; cursor: not-allowed; }
+.secondary { background: #172033; }
+.ghost { background: #e8efff; color: #24519d; }
+.error { background: #3b1219; color: #ffd3dc; }
+.muted { color: #6b7d9b; }
+
+@media (max-width: 900px) {
+  .page { padding: 20px; }
+  .hero, .grid { grid-template-columns: 1fr; }
+  .hero { flex-direction: column; }
+}

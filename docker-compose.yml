@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: ./backend
+    container_name: ml-grupos-backend
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_DIR: /app/models
+      ALLOWED_ORIGINS: "*"
+
+  frontend:
+    image: node:20-alpine
+    container_name: ml-grupos-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8000
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
