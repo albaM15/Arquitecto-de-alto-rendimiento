@@ -15,7 +15,7 @@ output "predictions_table" {
 }
 
 output "backend_url" {
-  value = local.deploy_backend ? "http://${aws_lb.backend[0].dns_name}" : "Backend no desplegado todavía. Ejecuta scripts/deploy_backend_to_ecr.sh."
+  value = local.deploy_backend ? "http://${aws_lb.backend[0].dns_name}" : "Backend no desplegado todavía. Define backend_image_uri para crear el servicio ECS."
 }
 
 output "frontend_bucket" {
