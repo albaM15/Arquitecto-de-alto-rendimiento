@@ -147,10 +147,10 @@ class ModelService:
         expected = getattr(self.rf_model, "n_features_in_", len(self.model_features))
 
         if expected != len(self.model_features):
-            logger.warning(
-                "El RF espera %s features, pero selected_features tiene %s. Se ajustará por padding/truncado.",
-                expected,
-                len(self.model_features),
+            raise RuntimeError(
+                f"El modelo Random Forest espera {expected} features pero "
+                f"selected_features.json tiene {len(self.model_features)}. "
+                "Regenera los artefactos desde el notebook antes de desplegar."
             )
 
     def schema(self) -> dict[str, Any]:
@@ -193,6 +193,9 @@ class ModelService:
         schoolsup = as_binary(data.get("schoolsup", 0))
         famsup = as_binary(data.get("famsup", 1))
         romantic = as_binary(data.get("romantic", 0))
+        paid = as_binary(data.get("paid", 0))
+        nursery = as_binary(data.get("nursery", 1))
+        higher = as_binary(data.get("higher", 1))
 
         indice_rendimiento = 0.2 * raw["G1"] + 0.3 * raw["G2"] + 0.5 * raw["G3"]
         tendencia_calificaciones = raw["G3"] - raw["G1"]
@@ -209,14 +212,20 @@ class ModelService:
 
         feature_dict = {
             **raw,
+            "schoolsup": schoolsup,
+            "famsup": famsup,
+            "paid": paid,
+            "activities": activities,
+            "nursery": nursery,
+            "higher": higher,
+            "internet": internet,
+            "romantic": romantic,
             "indice_rendimiento": indice_rendimiento,
             "tendencia_calificaciones": tendencia_calificaciones,
             "indice_participacion": indice_participacion,
             "perfil_social": perfil_social,
             "autonomia_estudio": autonomia_estudio,
             "estilo_liderazgo": estilo_liderazgo,
-            "riesgo_academico": riesgo_academico,
-            "balance_social": balance_social,
         }
 
         if self.scaler is not None and hasattr(self.scaler, "feature_names_in_"):
@@ -255,12 +264,13 @@ class ModelService:
             else len(vector)
         )
 
-        if len(vector) < expected:
-            vector.extend([0.0] * (expected - len(vector)))
-
-        elif len(vector) > expected:
-            vector = vector[:expected]
-
+        if len(vector) != expected:
+            raise ValueError(
+                f"Desalineación de features: el modelo espera {expected} variables "
+                f"pero selected_features.json define {len(vector)}. "
+                "Verifica que selected_features.json, scaler.joblib y "
+                "random_forest_model.joblib provengan de la misma ejecución del notebook."
+            )
         return np.array([vector], dtype=float)
 
     def predict_one(self, student: StudentInput) -> PredictionResponse:
