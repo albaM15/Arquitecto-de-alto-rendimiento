@@ -47,3 +47,9 @@ variable "tags" {
     Environment = "dev"
   }
 }
+
+variable "aws_profile" {
+  description = "Perfil de AWS CLI a usar para autenticación."
+  type        = string
+  default     = "machine"
+}

@@ -1,5 +1,5 @@
 locals {
-  model_artifact_files = toset(concat(fileset(var.model_artifacts_path, "*.joblib"), fileset(var.model_artifacts_path, "*.json")))
+  model_artifact_files = setunion(fileset(var.model_artifacts_path, "*.joblib"), fileset(var.model_artifacts_path, "*.json"))
 }
 
 resource "aws_s3_bucket" "model_artifacts" {
