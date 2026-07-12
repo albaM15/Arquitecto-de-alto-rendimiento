@@ -175,7 +175,7 @@ resource "aws_ecs_task_definition" "backend" {
   container_definitions = jsonencode([
     {
       name      = "backend"
-      image     = var.backend_image_uri
+      image     = local.backend_image_uri
       essential = true
       portMappings = [
         {
@@ -222,7 +222,7 @@ resource "aws_ecs_service" "backend" {
     container_port   = var.container_port
   }
 
-  depends_on = [aws_lb_listener.http]
+  depends_on = [aws_lb_listener.http, null_resource.backend_build_push]
 }
 
 resource "aws_appautoscaling_target" "backend" {
