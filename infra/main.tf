@@ -3,7 +3,7 @@ resource "random_id" "suffix" {
 }
 
 locals {
-  deploy_backend = length(trimspace(var.backend_image_uri)) > 0
+  deploy_backend = true   # antes: length(trimspace(var.backend_image_uri)) > 0
   common_tags = merge(var.tags, {
     Project   = var.project_name
     ManagedBy = "Terraform"

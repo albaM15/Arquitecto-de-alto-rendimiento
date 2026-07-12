@@ -10,12 +10,6 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "backend_image_uri" {
-  description = "URI completa de la imagen Docker del backend en ECR. Déjalo vacío en el primer terraform apply."
-  type        = string
-  default     = ""
-}
-
 variable "container_port" {
   description = "Puerto interno del backend FastAPI."
   type        = number
