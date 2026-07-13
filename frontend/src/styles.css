@@ -1003,3 +1003,123 @@ button, input, select {
   border-top: 1px solid var(--outline-variant);
   margin-top: auto;
 }
+
+/* User Feedback Section styles */
+.group-feedback-section {
+  border-top: 1px solid var(--outline-variant);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.feedback-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.05em;
+}
+
+.feedback-options {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-feedback-opt {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--surface-container-high);
+  background-color: var(--surface-container-low);
+  color: var(--on-surface-variant);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-feedback-opt:hover {
+  background-color: var(--surface-container);
+  color: var(--on-surface);
+  border-color: var(--outline);
+}
+
+.btn-feedback-opt.selected-accept {
+  background-color: var(--secondary-light);
+  color: var(--secondary-hover);
+  border-color: var(--secondary);
+}
+
+.btn-feedback-opt.selected-reject {
+  background-color: var(--error-container);
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.feedback-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid var(--outline-variant);
+  background-color: var(--surface-container-lowest);
+  resize: vertical;
+  color: var(--on-surface);
+  transition: var(--transition);
+}
+
+.feedback-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.btn-feedback-submit {
+  align-self: flex-end;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  background-color: var(--primary);
+  color: var(--on-primary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-feedback-submit:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.btn-feedback-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.feedback-status-msg {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.feedback-status-msg.success {
+  background-color: var(--secondary-light);
+  color: var(--secondary-hover);
+}
+
+.feedback-status-msg.error {
+  background-color: var(--error-container);
+  color: var(--error);
+}
+

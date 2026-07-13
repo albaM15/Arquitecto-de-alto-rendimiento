@@ -73,10 +73,44 @@ resource "aws_iam_role_policy" "ecs_task_access" {
           "dynamodb:Query"
         ]
         Resource = aws_dynamodb_table.predictions.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "cloudwatch:PutMetricData",
+          "cloudwatch:GetMetricData",
+          "cloudwatch:ListMetrics",
+          "cloudwatch:GetMetricStatistics",
+          "cloudwatch:DescribeAlarmsForMetric",
+          "cloudwatch:DescribeAlarms",
+          "cloudwatch:DescribeAlarmHistory",
+          "ec2:DescribeRegions",
+          "ec2:DescribeInstances",
+          "tag:GetResources"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "comprehend:DetectSentiment"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:GetLogEvents",
+          "logs:FilterLogEvents"
+        ]
+        Resource = "*"
       }
     ]
   })
 }
+
 
 resource "aws_security_group" "alb" {
   count       = local.deploy_backend ? 1 : 0
@@ -92,6 +126,14 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "Grafana"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -99,6 +141,7 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 
 resource "aws_security_group" "ecs" {
   count       = local.deploy_backend ? 1 : 0

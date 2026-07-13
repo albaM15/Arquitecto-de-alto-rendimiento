@@ -99,6 +99,11 @@ def predict_profile(request: PredictionRequest) -> PredictionResponse:
     return model_service.predict_one(request.student)
 
 
+@app.post("/api/v1/predict-profile-nn", response_model=PredictionResponse)
+def predict_profile_nn(request: PredictionRequest) -> PredictionResponse:
+    return model_service.predict_one_nn(request.student)
+
+
 @app.post("/api/v1/predict-profiles", response_model=list[PredictionResponse])
 def predict_profiles(request: BatchPredictionRequest) -> list[PredictionResponse]:
     return [

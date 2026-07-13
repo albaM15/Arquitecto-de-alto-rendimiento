@@ -29,3 +29,8 @@ output "cloudfront_distribution_id" {
 output "frontend_url" {
   value = "https://${aws_cloudfront_distribution.frontend.domain_name}"
 }
+
+output "grafana_url" {
+  value = local.deploy_backend ? "http://${aws_lb.backend[0].dns_name}:3000" : "Grafana no desplegado."
+}
+

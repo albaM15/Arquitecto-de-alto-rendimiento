@@ -100,6 +100,7 @@ class ModelService:
         self.model_dir = Path(self.settings.model_dir)
 
         self.rf_model: Any | None = None
+        self.nn_model: Any | None = None
         self.scaler: Any | None = None
 
         self.profile_map: dict[int, str] = DEFAULT_PROFILE_MAP.copy()
@@ -108,7 +109,7 @@ class ModelService:
 
     @property
     def loaded(self) -> bool:
-        return self.rf_model is not None
+        return self.rf_model is not None and self.nn_model is not None
 
     def load(self) -> None:
         download_model_artifacts_from_s3(
@@ -116,16 +117,24 @@ class ModelService:
             str(self.model_dir)
         )
 
-        rf_path = self.model_dir / "random_forest_model.joblib"
-        scaler_path = self.model_dir / "scaler.joblib"
-        profiles_path = self.model_dir / "profiles.json"
-        features_path = self.model_dir / "selected_features.json"
+        base_path = self.model_dir
+        rf_path = base_path / "random_forest_model.joblib"
+        nn_path = base_path / "neural_network_model.joblib"
+        scaler_path = base_path / "scaler.joblib"
+        profiles_path = base_path / "profiles.json"
+        features_path = base_path / "selected_features.json"
 
         if not rf_path.exists():
             raise FileNotFoundError(f"No se encontró el modelo Random Forest en {rf_path}")
 
         self.rf_model = joblib.load(rf_path)
         logger.info("Random Forest cargado desde %s", rf_path)
+
+        if nn_path.exists():
+            self.nn_model = joblib.load(base_path / "neural_network_model.joblib")
+            logger.info("Neural Network cargado desde %s", nn_path)
+        else:
+            raise FileNotFoundError(f"No se encontró el modelo Neural Network en {nn_path}")
 
         if scaler_path.exists():
             self.scaler = joblib.load(scaler_path)
@@ -304,6 +313,9 @@ class ModelService:
             "conductuales y sociales son más similares a ese perfil aprendido por el modelo."
         )
 
+        # Enviar métricas a CloudWatch de forma no bloqueante
+        log_prediction_metric(self.model_version, profile_name, float(confidence))
+
         return PredictionResponse(
             student_id=student.student_id or "",
             student_name=student.student_name,
@@ -315,5 +327,85 @@ class ModelService:
             explanation=explanation,
         )
 
+    def predict_one_nn(self, student: dict | StudentInput) -> PredictionResponse:
+        if isinstance(student, dict):
+            student = StudentInput(**student)
 
-model_service = ModelService()
+        if self.nn_model is None:
+            self.load()
+
+        vector = self.vectorize(student)
+
+        prediction = int(self.nn_model.predict(vector)[0])
+
+        probabilities_raw = (
+            self.nn_model.predict_proba(vector)[0]
+            if hasattr(self.nn_model, "predict_proba")
+            else []
+        )
+
+        classes = list(
+            getattr(self.nn_model, "classes_", range(len(probabilities_raw)))
+        )
+
+        probabilities = {
+            self.profile_map.get(int(cls), str(cls)): round(float(prob), 4)
+            for cls, prob in zip(classes, probabilities_raw)
+        }
+
+        confidence = max(probabilities.values()) if probabilities else 1.0
+        profile_name = self.profile_map.get(prediction, f"Perfil {prediction}")
+
+        explanation = (
+            f"El estudiante fue clasificado como '{profile_name}' porque sus variables académicas, "
+            "conductuales y sociales son más similares a ese perfil aprendido por el modelo."
+        )
+
+        # Enviar métricas a CloudWatch de forma no bloqueante
+        log_prediction_metric("nn-mlp-v1", profile_name, float(confidence))
+
+        return PredictionResponse(
+            student_id=student.student_id or "",
+            student_name=student.student_name,
+            profile_id=prediction,
+            profile_name=profile_name,
+            confidence=round(float(confidence), 4),
+            probabilities=probabilities,
+            model_version="nn-mlp-v1",
+            explanation=explanation,
+        )
+
+
+def log_prediction_metric(model_name: str, profile_name: str, confidence: float) -> None:
+    """Envía métricas personalizadas a Amazon CloudWatch de forma aislada."""
+    try:
+        import boto3
+        cw = boto3.client('cloudwatch', region_name='us-east-1')
+        cw.put_metric_data(
+            Namespace='EduTech/MachineLearning',
+            MetricData=[
+                {
+                    'MetricName': 'PredictionCount',
+                    'Dimensions': [
+                        {'Name': 'ModelName', 'Value': model_name},
+                        {'Name': 'ProfileName', 'Value': profile_name}
+                    ],
+                    'Value': 1.0,
+                    'Unit': 'Count'
+                },
+                {
+                    'MetricName': 'PredictionConfidence',
+                    'Dimensions': [
+                        {'Name': 'ModelName', 'Value': model_name}
+                    ],
+                    'Value': confidence,
+                    'Unit': 'None'
+                }
+            ]
+        )
+        logger.info("Métricas de CloudWatch enviadas: %s - %s - Conf: %s", model_name, profile_name, confidence)
+    except Exception as e:
+        logger.warning("No se pudo enviar la métrica a CloudWatch: %s", e)
+
+
+model_service = ModelService()

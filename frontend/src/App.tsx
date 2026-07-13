@@ -76,8 +76,67 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'testing' | 'ok' | 'failed'>('idle');
+  const [feedbacks, setFeedbacks] = useState<Record<number, {
+    accepted: boolean | null;
+    comment: string;
+    submitting: boolean;
+    successMessage: string | null;
+    errorMessage: string | null;
+  }>>({});
 
   const templateUrl = `${apiBase}/api/v1/files/template`;
+
+  async function submitFeedback(groupId: number) {
+    const fb = feedbacks[groupId];
+    if (!fb || fb.accepted === null) return;
+
+    setFeedbacks(prev => ({
+      ...prev,
+      [groupId]: { ...prev[groupId], submitting: true, successMessage: null, errorMessage: null }
+    }));
+
+    try {
+      const response = await fetch(`${apiBase}/api/v1/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          course_id: courseId.trim() || 'CURSO_ML_2026',
+          group_id: groupId,
+          accepted: fb.accepted,
+          teacher_comment: fb.comment.trim() || null,
+          manual_changes: []
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al enviar la retroalimentación');
+      }
+
+      setFeedbacks(prev => ({
+        ...prev,
+        [groupId]: {
+          ...prev[groupId],
+          submitting: false,
+          successMessage: '¡Retroalimentación enviada con éxito!',
+          errorMessage: null
+        }
+      }));
+    } catch (err) {
+      setFeedbacks(prev => ({
+        ...prev,
+        [groupId]: {
+          ...prev[groupId],
+          submitting: false,
+          successMessage: null,
+          errorMessage: err instanceof Error ? err.message : 'Error al conectar con el servidor'
+        }
+      }));
+    }
+  }
 
   async function callJson(path: string) {
     setLoading(true);
@@ -536,7 +595,7 @@ function App() {
                                 {member.profile_name}
                               </span>
                               <span style={{ fontSize: '10px', color: 'var(--on-surface-variant)' }}>
-                                Riesgo: {(member.risk_score * 100).toFixed(0)}%
+                                Riesgo: {Math.min(100, Math.round((member.risk_score / 5) * 100))}%
                               </span>
                             </div>
                           </div>
@@ -557,6 +616,82 @@ function App() {
 
                       {/* Explanation */}
                       <p className="group-explanation">{group.explanation}</p>
+
+                      {/* Feedback section */}
+                      {(() => {
+                        const fb = feedbacks[group.group_id] || {
+                          accepted: null,
+                          comment: '',
+                          submitting: false,
+                          successMessage: null,
+                          errorMessage: null
+                        };
+                        return (
+                          <div className="group-feedback-section">
+                            <span className="feedback-title">Retroalimentación del Docente</span>
+                            <div className="feedback-options">
+                              <button
+                                className={`btn-feedback-opt ${fb.accepted === true ? 'selected-accept' : ''}`}
+                                onClick={() => setFeedbacks(prev => ({
+                                  ...prev,
+                                  [group.group_id]: { ...fb, accepted: true }
+                                }))}
+                                disabled={fb.submitting}
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>check_circle</span>
+                                Aceptar
+                              </button>
+                              <button
+                                className={`btn-feedback-opt ${fb.accepted === false ? 'selected-reject' : ''}`}
+                                onClick={() => setFeedbacks(prev => ({
+                                  ...prev,
+                                  [group.group_id]: { ...fb, accepted: false }
+                                }))}
+                                disabled={fb.submitting}
+                              >
+                                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>cancel</span>
+                                Rechazar
+                              </button>
+                            </div>
+                            
+                            {fb.accepted !== null && (
+                              <>
+                                <textarea
+                                  className="feedback-textarea"
+                                  placeholder="¿Por qué? Agrega comentarios sobre la afinidad, cambios manuales..."
+                                  value={fb.comment}
+                                  onChange={(e) => setFeedbacks(prev => ({
+                                    ...prev,
+                                    [group.group_id]: { ...fb, comment: e.target.value }
+                                  }))}
+                                  disabled={fb.submitting}
+                                />
+                                <button
+                                  className="btn-feedback-submit"
+                                  onClick={() => submitFeedback(group.group_id)}
+                                  disabled={fb.submitting}
+                                >
+                                  {fb.submitting ? 'Enviando...' : 'Enviar Retroalimentación'}
+                                </button>
+                              </>
+                            )}
+
+                            {fb.successMessage && (
+                              <div className="feedback-status-msg success">
+                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>check</span>
+                                {fb.successMessage}
+                              </div>
+                            )}
+
+                            {fb.errorMessage && (
+                              <div className="feedback-status-msg error">
+                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>error</span>
+                                {fb.errorMessage}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}

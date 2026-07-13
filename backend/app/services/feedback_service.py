@@ -19,6 +19,20 @@ def _to_dynamodb_item(payload: dict) -> dict:
 def save_feedback(feedback: FeedbackRequest) -> FeedbackResponse:
     settings = get_settings()
     feedback_id = str(uuid4())
+
+    cognitive_sentiment = "UNKNOWN"
+    if feedback.teacher_comment and feedback.teacher_comment.strip():
+        try:
+            comprehend = boto3.client("comprehend", region_name="us-east-1")
+            response = comprehend.detect_sentiment(
+                Text=feedback.teacher_comment,
+                LanguageCode="es"
+            )
+            cognitive_sentiment = response.get("Sentiment", "UNKNOWN")
+        except Exception as exc:
+            print(f"Error al detectar sentimiento con AWS Comprehend: {exc}")
+            cognitive_sentiment = "UNKNOWN"
+
     payload = {
         "pk": f"COURSE#{feedback.course_id}",
         "sk": f"FEEDBACK#{datetime.utcnow().isoformat()}#{feedback_id}",
@@ -28,6 +42,7 @@ def save_feedback(feedback: FeedbackRequest) -> FeedbackResponse:
         "accepted": feedback.accepted,
         "teacher_comment": feedback.teacher_comment,
         "manual_changes": feedback.manual_changes,
+        "cognitive_sentiment": cognitive_sentiment,
         "created_at": datetime.utcnow().isoformat(),
     }
 
